@@ -4,7 +4,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import java.nio.file.*;
 import java.util.*;
 
-/** Session payments live in memory (what the overlay shows); every payment is also appended to a history file. */
+/** Payments from the last 24h live in memory (what the overlay shows); every payment is also appended to a history file. */
 final class Store {
     private static final List<String[]> rows = new ArrayList<>(); // time, I|O, player, amount
     private static Path file;
@@ -14,6 +14,14 @@ final class Store {
             Path dir = FabricLoader.getInstance().getConfigDir().resolve("kittypay");
             Files.createDirectories(dir);
             file = dir.resolve("payments_history.tsv");
+            // reload the last 24h so the "24H PROFIT" page survives restarting the game
+            if (Files.exists(file)) {
+                long cut = System.currentTimeMillis() - 24L * 3600 * 1000;
+                for (String l : Files.readAllLines(file)) {
+                    String[] p = l.split("\t");
+                    if (p.length == 4 && Long.parseLong(p[0]) >= cut) rows.add(p);
+                }
+            }
         } catch (Exception e) { System.err.println("[kittypay] history disabled: " + e); }
     }
 
@@ -27,7 +35,10 @@ final class Store {
         } catch (Exception e) { System.err.println("[kittypay] history write failed: " + e); }
     }
 
-    static synchronized void reset() { rows.clear(); }
+    static synchronized void reset() {
+        rows.clear();
+        try { if (file != null) Files.writeString(file, ""); } catch (Exception ignored) {}
+    }
 
     static synchronized String json() {
         StringBuilder sb = new StringBuilder("{\"log\":\"Minecraft chat (in-game mod)\",\"log_ok\":true,\"items\":[");
