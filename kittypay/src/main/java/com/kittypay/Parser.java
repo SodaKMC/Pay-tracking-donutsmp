@@ -4,7 +4,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 final class Parser {
-    private static final String AMT = "\\$?([\\d][\\d,]*\\.?\\d*\\s?[kKmMbBtT]?)";
+    private static final String AMT = "\\$?\\s*(\\d[\\d,]*\\.?\\d*[kKmMbBtT]?)(?![A-Za-z])";
     // Anchored at the start so a player typing "X paid you $1B" in public chat
     // ("Name » text") can't fake an entry.
     private static final Pattern IN  = Pattern.compile("^\\s*([.\\w]{3,17}) (?:has )?paid you " + AMT);
