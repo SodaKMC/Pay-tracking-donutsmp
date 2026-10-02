@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "kittypay",
+  "version": "1.0.0",
+  "name": "Kitty Pay Tracker",
+  "description": "Tracks your /pay money in and out from chat and shows it on a pink Hello Kitty OBS overlay.",
+  "authors": ["you"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": { "client": ["com.kittypay.KittyPayMod"] },
+  "depends": { "fabricloader": ">=0.15.0", "fabric-api": "*", "minecraft": "*" }
+}

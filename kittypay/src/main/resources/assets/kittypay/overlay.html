@@ -1,0 +1,37 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Kitty Pay Overlay</title><style>
+html,body{margin:0;background:transparent;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;color:#ffe4f3}
+#c{zoom:var(--z,1);width:440px;margin:6px;background:rgba(24,4,18,.88);border:2px solid #ff4fa8;border-radius:20px;box-shadow:0 0 16px #ff4fa8aa,inset 0 0 12px #ff4fa833;padding:12px}
+header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+h1{font:700 14px monospace;letter-spacing:2px;color:#ffb3dc;margin:0;flex:1;text-shadow:0 0 8px #ff4fa8}
+.bal{font-weight:700;color:#ffb3dc;font-size:15px}.k{width:32px;height:32px}
+.sum{display:flex;gap:8px;margin-bottom:8px;font-size:12px}
+.sum div{flex:1;background:#2a0a20;border:1px solid #ff4fa8;border-radius:10px;padding:4px;text-align:center}
+.sum small{display:block;color:#c77aa6;font-size:10px}.sum b{font-size:13px}
+.r{display:flex;align-items:center;gap:8px;background:#2a0a20;border:1px solid #ff4fa855;border-radius:9px;padding:6px 9px;margin-bottom:5px;font-size:14px}
+.r.new{animation:in .5s ease-out}@keyframes in{from{transform:translateX(-30px);opacity:0;box-shadow:0 0 14px #ff4fa8}to{transform:none;opacity:1}}
+.tag{font:700 9px sans-serif;border-radius:5px;padding:3px 6px}
+.tag.in{background:#0b3a22;color:#6dffb0;border:1px solid #6dffb0}.tag.out{background:#3a0b1c;color:#ff5c8a;border:1px solid #ff5c8a}
+.nm{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.amt{font-weight:700}.amt.in{color:#6dffb0}.amt.out{color:#ff5c8a}.t{color:#c77aa6;font-size:12px;width:34px;text-align:right}
+.empty{text-align:center;color:#c77aa6;padding:10px;font-size:13px}
+</style></head><body><svg width="0" height="0" style="position:absolute"><defs><symbol id="kt" viewBox="0 0 100 100"><g stroke="#46093a" stroke-width="3" stroke-linejoin="round"><polygon points="12,40 14,10 40,26" fill="#ffeef7"/><polygon points="88,40 86,10 60,26" fill="#ffeef7"/><ellipse cx="50" cy="58" rx="41" ry="30" fill="#ffeef7"/><ellipse cx="66" cy="22" rx="10" ry="8" fill="#ff4696"/><ellipse cx="86" cy="22" rx="10" ry="8" fill="#ff4696"/><circle cx="76" cy="22" r="5.5" fill="#ff78b4"/><ellipse cx="50" cy="66" rx="5" ry="3.6" fill="#ff5a96" stroke-width="1.5"/></g><ellipse cx="30" cy="60" rx="3.6" ry="4.6" fill="#46093a"/><ellipse cx="70" cy="60" rx="3.6" ry="4.6" fill="#46093a"/><g stroke="#46093a" stroke-width="2.5" stroke-linecap="round"><path d="M2 60L20 60M2 66L20 64M2 72L20 68M98 60L80 60M98 66L80 64M98 72L80 68"/></g></symbol></defs></svg>
+<div id="c"><header><svg class="k"><use href="#kt"/></svg><h1>RECENT PAYMENTS</h1><span class="bal" id="bal"></span><svg class="k"><use href="#kt"/></svg></header>
+<div class="sum" id="sum"></div><div id="list"></div></div>
+<script>
+var q=new URLSearchParams(location.search),ROWS=+q.get('rows')||8;
+if(q.get('scale'))document.documentElement.style.setProperty('--z',q.get('scale'));
+if(q.get('summary')==='0')document.getElementById('sum').style.display='none';
+function fmt(n){var a=Math.abs(n),s=n<0?'-':'';if(a>=1e12)return s+'$'+(a/1e12).toFixed(2)+'T';if(a>=1e9)return s+'$'+(a/1e9).toFixed(2)+'B';if(a>=1e6)return s+'$'+(a/1e6).toFixed(2)+'M';if(a>=1e3)return s+'$'+(a/1e3).toFixed(2)+'K';return s+'$'+Math.round(a).toLocaleString()}
+function ago(t){var m=Math.floor((Date.now()-t)/60000);if(m<1)return'now';if(m<60)return m+'m';var h=Math.floor(m/60);return h<24?h+'h':Math.floor(h/24)+'d'}
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+var seen=0;
+function draw(items){
+ var i=0,o=0;items.forEach(function(x){x.d==='in'?i+=x.a:o+=x.a});
+ document.getElementById('bal').textContent='Bal '+fmt(i-o);
+ document.getElementById('sum').innerHTML='<div><small>Received</small><b style="color:#6dffb0">'+fmt(i)+'</b></div><div><small>Paid out</small><b style="color:#ff5c8a">'+fmt(o)+'</b></div><div><small>Payers</small><b>'+new Set(items.filter(function(x){return x.d==='in'}).map(function(x){return x.p})).size+'</b></div>';
+ var fresh=items.length-seen;if(fresh<0)fresh=0;seen=items.length;
+ var rev=items.slice().reverse().slice(0,ROWS);
+ document.getElementById('list').innerHTML=rev.length?rev.map(function(x,n){return '<div class="r'+(n<fresh?' new':'')+'"><span class="tag '+x.d+'">'+(x.d==='in'?'GOT':'SENT')+'</span><span class="nm">'+esc(x.p)+'</span><span class="amt '+x.d+'">'+fmt(x.a)+'</span><span class="t">'+ago(x.t)+'</span></div>'}).join(''):'<div class="empty">waiting for payments \u2665</div>'}
+function poll(){fetch('/api/state').then(function(r){return r.json()}).then(function(j){draw(j.items)}).catch(function(){})}
+poll();setInterval(poll,1000);
+</script></body></html>
