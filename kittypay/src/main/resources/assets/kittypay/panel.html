@@ -1,9 +1,9 @@
 <!DOCTYPE html><html><head><meta charset="utf-8"><title>Kitty Pay Control</title><style>
 body{background:#14030f;color:#ffe4f3;font-family:system-ui,sans-serif;max-width:560px;margin:24px auto;padding:0 14px}
 code{background:#2a0a20;padding:2px 6px;border-radius:6px;color:#ffb3dc}button{background:#ff4fa8;border:0;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer}
-iframe{border:2px solid #ff4fa8;border-radius:14px;width:100%;height:520px;background:#555}.m{color:#c77aa6}
+iframe{border:2px solid #ff4fa8;border-radius:14px;width:372px;height:530px;display:block;background:#555}.m{color:#c77aa6}
 </style></head><body><h2>&hearts; Kitty Pay Control</h2>
-<p>OBS: add a <b>Browser</b> source, URL <code id="u"></code>, width <b>470</b>, height <b>600</b>.</p>
+<p>OBS: add a <b>Browser</b> source, URL <code id="u"></code>, width <b>360</b>, height <b>520</b>.</p>
 <p id="s" class="m"></p><button id="r">Reset session</button><p class="m">Preview:</p><iframe id="f"></iframe>
 <script>var o=location.origin+'/overlay';document.getElementById('u').textContent=o;document.getElementById('f').src=o;
 document.getElementById('r').onclick=function(){if(confirm('Clear everything shown on the overlay?'))fetch('/api/reset',{method:'POST',headers:{'X-Kitty':'1'}})};
